@@ -34,15 +34,14 @@ def point_in_poly(point: tuple, poly: list) -> bool:
     crossing_points = []
 
     for side in crossed_sides:
-        # k = (side[0][1] - side[1][1]) / (side[0][0] - side[1][0] + 0.000001)
-        # b = side[0][1] - k * side[0][0]
-        # y = point[1]
-        # x = (y - b) / k
+        x1, y1 = side[0]
+        x2, y2 = side[1]
 
-        # k1 = point[1] / side[0][1]
-        # k2 = point[1] / side[1][1]
+        if y1 == y2:
+            continue
 
-        
+        x = x1 + (point[1] - y1) * (x2 - x1) / (y2 - y1)
+        y = point[1]
 
         crossing_points.append((x, y))
 
