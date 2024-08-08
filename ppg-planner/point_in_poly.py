@@ -44,7 +44,8 @@ def point_in_poly(point: tuple, poly: list) -> bool:
         x = x1 + (point[1] - y1) * (x2 - x1) / (y2 - y1)
         y = point[1]
 
-        crossing_points.append((x, y))
+        if (x, y) not in crossing_points:
+            crossing_points.append((x, y))
 
     left_c, right_c = 0, 0
 
@@ -81,9 +82,9 @@ class PPGPlannerNode(Node):
 
     def timer_callback(self):
 
-        step = 0.2
-        poly = [(0,0), (-2,1), (3,7), (4,5), (6, -1)]
-        point = (0.5, 0.5)
+        step = 0.3
+        poly = [(0,0), (0, 1), (3,7), (4,5), (6, 0.4)]
+        exclude_poly_list = [[(1,1), (1,2), (2, 3), (2, 1)], [(2.3, 2), (2.4, 3), (3, 3), (3, 2)]]
 
         poly_msg = PolygonStamped()
         poly_msg.header.frame_id = "map"
@@ -98,6 +99,18 @@ class PPGPlannerNode(Node):
 
         self.poly_publisher.publish(poly_msg)
 
+        for ex_poly in exclude_poly_list:
+            poly_msg = PolygonStamped()
+            poly_msg.header.frame_id = "map"
+            poly_msg.header.stamp = self.get_clock().now().to_msg()
+            for pt in ex_poly:
+                pt_msg = Point32()
+                pt_msg.x = float(pt[0])
+                pt_msg.y = float(pt[1])
+                pt_msg.z = 0.0
+                poly_msg.polygon.points.append(pt_msg)
+            self.poly_publisher.publish(poly_msg)
+        
         x_min, y_min = None, None
         x_max, y_max = None, None
 
@@ -116,7 +129,13 @@ class PPGPlannerNode(Node):
         while y_curr <= y_max:
             while x_curr <= x_max:
                 if point_in_poly((x_curr, y_curr), poly=poly):
-                    points_in_area.append((x_curr, y_curr))
+                    include = True
+                    for excluded_poly in exclude_poly_list:
+                        if point_in_poly((x_curr, y_curr), excluded_poly):
+                            include = False
+                            break
+                    if include:
+                        points_in_area.append((x_curr, y_curr))
                 x_curr += step
             y_curr += step
             x_curr = x_min
@@ -125,16 +144,16 @@ class PPGPlannerNode(Node):
         for i in range(len(points_in_area)):
             msg = Marker()
 
-            msg.type = 1 
+            msg.type = 2
             msg.id = i
 
-            msg.scale.x = 0.05   
-            msg.scale.y = 0.05
-            msg.scale.z = 0.05
+            msg.scale.x = 0.1
+            msg.scale.y = 0.1
+            msg.scale.z = 0.1
 
-            msg.color.r = 0.5
-            msg.color.g = 0.2
-            msg.color.b = 0.7
+            msg.color.r = 1.0
+            msg.color.g = 0.0
+            msg.color.b = 0.0
             msg.color.a = 1.0
 
             msg.pose.position.x = float(points_in_area[i][0])
