@@ -2,7 +2,8 @@
 
 import rclpy
 from rclpy.node import Node
-from visualization_msgs.msg import Marker
+from visualization_msgs.msg import Marker, MarkerArray
+from geometry_msgs.msg import PolygonStamped, Point32
 
 
 def point_in_poly(point: tuple, poly: list) -> bool:
@@ -19,16 +20,16 @@ def point_in_poly(point: tuple, poly: list) -> bool:
     crossed_sides = []
 
     for i in range(len(poly) - 1):
-        if point[1] > poly[i][1] and point[1] < poly[i + 1][1]:
+        if point[1] >= poly[i][1] and point[1] <= poly[i + 1][1]:
             crossed_sides.append((poly[i], poly[i + 1]))
-        elif point[1] < poly[i][1] and point[1] > poly[i + 1][1]:
+        elif point[1] <= poly[i][1] and point[1] >= poly[i + 1][1]:
             crossed_sides.append((poly[i], poly[i + 1]))
 
     j = len(poly) - 1
 
-    if point[1] > poly[0][1] and point[1] < poly[j][1]:
+    if point[1] >= poly[0][1] and point[1] <= poly[j][1]:
         crossed_sides.append((poly[0], poly[j]))
-    elif point[1] < poly[0][1] and point[1] > poly[j][1]:
+    elif point[1] <= poly[0][1] and point[1] >= poly[j][1]:
         crossed_sides.append((poly[0], poly[j]))
 
     crossing_points = []
@@ -51,6 +52,9 @@ def point_in_poly(point: tuple, poly: list) -> bool:
         xcp, ycp = cpoint
         x, y = point
 
+        if x == xcp and y == ycp: 
+            return True
+
         if xcp < x:
             left_c += 1
         elif xcp > x:
@@ -69,21 +73,83 @@ class PPGPlannerNode(Node):
 
     def __init__(self):
         super().__init__('minimal_publisher')
-        self.publisher_ = self.create_publisher(Marker, 'points_in_poly', 10)
+        self.points_publisher = self.create_publisher(MarkerArray, 'points_in_poly', 10)
+        self.poly_publisher = self.create_publisher(PolygonStamped, 'poly', 10)
         timer_period = 0.5  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
     def timer_callback(self):
 
-        poly = [(0,0), (1,0), (1,1), (0,1)]
+        step = 0.2
+        poly = [(0,0), (-2,1), (3,7), (4,5), (6, -1)]
         point = (0.5, 0.5)
 
-        print(f'{point_in_poly(point=point, poly=poly)}')
+        poly_msg = PolygonStamped()
+        poly_msg.header.frame_id = "map"
+        poly_msg.header.stamp = self.get_clock().now().to_msg()
 
-        msg = Marker()
+        for pt in poly:
+            pt_msg = Point32()
+            pt_msg.x = float(pt[0])
+            pt_msg.y = float(pt[1])
+            pt_msg.z = 0.0
+            poly_msg.polygon.points.append(pt_msg)
 
-        self.publisher_.publish(msg)
+        self.poly_publisher.publish(poly_msg)
+
+        x_min, y_min = None, None
+        x_max, y_max = None, None
+
+        for side in poly:
+            if x_min is None or side[0] < x_min:
+                x_min = side[0]
+            if y_min is None or side[1] < y_min:
+                y_min = side[1]
+            if x_max is None or side[0] > x_max:
+                x_max = side[0]
+            if y_max is None or side[1] > y_max:
+                y_max = side[1]
+        
+        points_in_area = []
+        y_curr, x_curr = y_min, x_min
+        while y_curr <= y_max:
+            while x_curr <= x_max:
+                if point_in_poly((x_curr, y_curr), poly=poly):
+                    points_in_area.append((x_curr, y_curr))
+                x_curr += step
+            y_curr += step
+            x_curr = x_min
+
+        array = MarkerArray()
+        for i in range(len(points_in_area)):
+            msg = Marker()
+
+            msg.type = 1 
+            msg.id = i
+
+            msg.scale.x = 0.05   
+            msg.scale.y = 0.05
+            msg.scale.z = 0.05
+
+            msg.color.r = 0.5
+            msg.color.g = 0.2
+            msg.color.b = 0.7
+            msg.color.a = 1.0
+
+            msg.pose.position.x = float(points_in_area[i][0])
+            msg.pose.position.y = float(points_in_area[i][1])
+            msg.pose.position.z = 0.0
+
+            msg.pose.orientation.x = 0.0 
+            msg.pose.orientation.y = 0.0
+            msg.pose.orientation.z = 0.0 
+
+            msg.header.frame_id = "map"
+            msg.header.stamp = self.get_clock().now().to_msg()
+            array.markers.append(msg)
+
+        self.points_publisher.publish(array)
 
 def main(args=None):
     rclpy.init(args=args)
