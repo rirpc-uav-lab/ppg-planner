@@ -80,11 +80,13 @@ class PPGPlannerNode(Node):
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
-    def timer_callback(self):
-
-        step = 0.3
-        poly = [(0,0), (0, 1), (3,7), (4,5), (6, 0.4)]
-        exclude_poly_list = [[(1,1), (1,2), (2, 3), (2, 1)], [(2.3, 2), (2.4, 3), (3, 3), (3, 2)]]
+    def generate_points(self, poly, exclude_poly_list, step):
+        """
+        Args:
+            step: float
+            poly: list - [(x1, y1), (x2, y2), ... , (xn, yn)]
+            exclude_poly_list: list - [poly_1, poly_2, ... , poly_n]
+        """
 
         poly_msg = PolygonStamped()
         poly_msg.header.frame_id = "map"
@@ -169,6 +171,13 @@ class PPGPlannerNode(Node):
             array.markers.append(msg)
 
         self.points_publisher.publish(array)
+
+    def timer_callback(self):
+        step = 0.3
+        poly = [(0,0), (0, 1), (3,7), (4,5), (6, 0.4)]
+        exclude_poly_list = [[(1,1), (1,2), (2, 3), (2, 1)], [(2.3, 2), (2.4, 3), (3, 3), (3, 2)]]
+
+        self.generate_points(poly=poly, exclude_poly_list=exclude_poly_list, step=step)
 
 def main(args=None):
     rclpy.init(args=args)
