@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'ppg-planner'
+package_name = 'ppg_planner'
 
 setup(
     name=package_name,
@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            f'ppg_planner = {package_name}.point_in_poly:main'
         ],
     },
 )
