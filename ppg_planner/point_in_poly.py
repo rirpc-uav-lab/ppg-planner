@@ -75,27 +75,36 @@ def point_in_poly(point: tuple, poly: list) -> bool:
 class PPGPlannerNode(Node):
 
     def __init__(self):
-        super().__init__('minimal_publisher')
+        super().__init__('ppg_planner_node')
         self.points_publisher = self.create_publisher(MarkerArray, 'points_in_poly', 10)
         self.poly_publisher = self.create_publisher(PolygonStamped, 'poly', 10)
         self.polygrid_srv = self.create_service(PolyGrid, 'ppg_service', self.ppg_service_clb)
-        self.polygrid_client = self.create_client(PolyGrid, "ppg_service")
         timer_period = 0.5  # seconds
-        self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.i = 0
+        # self.timer = self.create_timer(timer_period, self.timer_callback)
 
 
     def ppg_service_clb(self, request, response):
         print("entered srv clb")
         print("generating points...")
-        points_raw = self.generate_points(request.zone, request.exclusion_zones, request.step)
+
+        zone_raw = []
+        for pt in request.zone.poly:
+            zone_raw.append((pt.x, pt.y))
+        
+        exclude_list_raw = []
+        for i in range(len(request.exclusion_zones)):
+            exclude_list_raw.append([])
+            for pt in request.exclusion_zones[i].poly:
+                exclude_list_raw[i].append((pt.x, pt.y))
+
+        points_raw = self.generate_points(zone_raw, exclude_list_raw, request.step)
 
 
         for point_raw in points_raw:
             point = Point32()
             point.x = point_raw[0]
             point.y = point_raw[1]
-            point.z = 0
+            point.z = 0.0
             response.point_grid.append(point)
         
         print("finished")
@@ -197,46 +206,6 @@ class PPGPlannerNode(Node):
         print("Published points")
 
         return points_in_area
-
-
-    def timer_callback(self):
-        step = 0.3
-        poly = [(0,0), (0, 1), (3,7), (4,5), (6, 0.4)]
-        exclude_poly_list = [[(1,1), (1,2), (2, 3), (2, 1)], [(2.3, 2), (2.4, 3), (3, 3), (3, 2)]]
-
-        print("generatinig request")
-
-        request = PolyGrid.Request()
-        request.step = step
-        for point_raw in poly:
-            point = Point32()
-            point.x = float(point_raw[0])
-            point.y = float(point_raw[1])
-            point.z = float(0)
-            request.zone.poly.append(point)
-
-        for ex_zone in exclude_poly_list:
-            ex_zone_cooked = Poly()
-            for point_raw in ex_zone:
-                point = Point32()
-                point.x = float(point_raw[0])
-                point.y = float(point_raw[1])
-                point.z = float(0)
-                ex_zone_cooked.poly.append(point)
-            request.exclusion_zones.append(ex_zone_cooked)
-
-        print("calling service")
-
-        self.future = self.polygrid_client.call_async(request)
-        
-        # print("spinning until future complete")
-        # rclpy.spin_until_future_complete(self, self.future)
-        print("returning result")
-        # return self.future.result()
-
-
-        # self.generate_points(poly=poly, exclude_poly_list=exclude_poly_list, step=step)
-
 
 
 def main(args=None):

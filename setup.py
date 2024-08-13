@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            f'ppg_planner = {package_name}.point_in_poly:main'
+            f'ppg_planner = {package_name}.point_in_poly:main',
+            f'test_client = {package_name}.test_client:main'
         ],
     },
 )
