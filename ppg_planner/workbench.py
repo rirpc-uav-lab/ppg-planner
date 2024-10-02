@@ -61,10 +61,10 @@ class SquareRegion:
         self.bottom_right_p = Point2d(center_point.x - side_size / 2, center_point.y - side_size / 2)
         self.bottom_left_p = Point2d(center_point.x - side_size / 2, center_point.y + side_size / 2)
     
-        self.left_side = Line2d(top_left_p, bottom_left_p)
-        self.right_side = Line2d(top_right_p, bottom_right_p)
-        self.top_side = Line2d(top_left_p, top_right_p)
-        self.bottom_side = Line2d(bottom_left_p, bottom_right_p)
+        self.left_side = Line2d(self.top_left_p, self.bottom_left_p)
+        self.right_side = Line2d(self.top_right_p, self.bottom_right_p)
+        self.top_side = Line2d(self.top_left_p, self.top_right_p)
+        self.bottom_side = Line2d(self.bottom_left_p, self.bottom_right_p)
 
     def print_info(self):
         print(f"center: ")
@@ -100,9 +100,9 @@ class SquareRegion:
             return False
 
 
-self.RED = (0, 0, 255)
-self.GREEN = (0, 255, 0)
-self.BLUE = (255, 0, 0)
+RED = (0, 0, 255)
+GREEN = (0, 255, 0)
+BLUE = (255, 0, 0)
 
 class GeometryDrawer:
     def __init__(self):
@@ -119,8 +119,8 @@ class GeometryDrawer:
 
 
 
-c = Point2d(5,5)
-sq = SquareRegion(c, 10)
+c = Point2d(500,500)
+sq = SquareRegion(c, 100)
 
 # line6 = Line2d(Point2d(0, 15), Point2d(10, 15))
 
@@ -129,10 +129,14 @@ line2 = Line2d(Point2d(0, 100), Point2d(100, 0))
 
 p = line1.intersect_line(line2)
 
+drawer = GeometryDrawer()
+
 canvas = np.zeros((1000, 1000, 3))
 cv.line(canvas, (int(line1.p1.x), int(line1.p1.y)), (int(line1.p2.x), int(line1.p2.y)), (255, 0, 0), 1)
 cv.line(canvas, (int(line2.p1.x), int(line2.p1.y)), (int(line2.p2.x), int(line2.p2.y)), (0, 255, 0), 1)
 cv.circle(canvas, (int(p.x), int(p.y)), 3, (0, 0, 255), 2)
+
+drawer.draw_square(sq, canvas, RED)
 
 cv.imwrite("result.png", canvas)
 
