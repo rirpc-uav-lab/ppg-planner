@@ -57,6 +57,63 @@ class PolyLike(ABC):
                 intersections.append(intersection)
 
         return intersections
+    
+    def point_in_poly(self, point: Point2d) -> bool:
+        # if len(point) != 2:
+        #     print("Error! Point in poly")
+        #     return False
+
+        crossed_sides = []
+
+        for i in range(len(self.sides) - 1):
+            if point.y >= self.sides[i].p1.y and point.y <= self.sides[i].p2.y:
+                crossed_sides.append((self.sides[i].p1, self.sides[i].p2))
+            elif point.y <= self.sides[i].p1.y and point.y >= self.sides[i].p2.y:
+                crossed_sides.append((self.sides[i].p1, self.sides[i].p2))
+
+        j = len(self.sides) - 1
+
+        if point.y >= self.sides[0].p1.y and point.y <= self.sides[j].p2.y:
+            crossed_sides.append((self.sides[0].p1, self.sides[j].p2))
+        elif point.y <= self.sides[0].p1.y and point.y >= self.sides[j].p2.y:
+            crossed_sides.append((self.sides[0].p1, self.sides[j].p2))
+
+        crossing_points = []
+
+        for side in crossed_sides:
+            x1, y1 = side[0].x, side[0].y
+            x2, y2 = side[1].x, side[1].y
+
+            if y1 == y2:
+                continue
+
+            x = x1 + (point.y - y1) * (x2 - x1) / (y2 - y1)
+            y = point.y
+
+            if (x, y) not in crossing_points:
+                crossing_points.append((x, y))
+
+        left_c, right_c = 0, 0
+
+        for cpoint in crossing_points:
+            xcp, ycp = cpoint
+            x, y = point.x, point.y
+
+            if x == xcp and y == ycp:
+                return True
+
+            if xcp < x:
+                left_c += 1
+            elif xcp > x:
+                right_c += 1
+            else:
+                return True
+
+        if left_c % 2 == 1 and right_c % 2 == 1:
+            return True
+        else:
+            return False
+
 
 
 class Line2d(LineLike):
@@ -177,10 +234,10 @@ class GeometryDrawer:
         pass
 
     def draw_line(self, line: Line2d, frame, color):
-        cv.line(frame, (int(line.p1.x), int(line.p1.y)), (int(line.p2.x), int(line.p2.y)), color, 1)
+        cv.line(frame, (int(line.p1.x), frame.shape[0] - int(line.p1.y)), (int(line.p2.x), frame.shape[0] - int(line.p2.y)), color, 1)
     
     def draw_point(self, point: Point2d, frame, color):
-        cv.circle(frame, (int(point.x), int(point.y)), 3, color, 2)
+        cv.circle(frame, (int(point.x), frame.shape[0] - int(point.y)), 3, color, 2)
     
     def draw_square(self, square: SquareRegion, frame, color):
         cv.rectangle(frame, (int(square.top_left_p.x), frame.shape[0] - int(square.top_left_p.y)), (int(square.bottom_right_p.x), frame.shape[0] - int(square.bottom_right_p.y)), color, 1)

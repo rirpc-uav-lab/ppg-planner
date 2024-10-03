@@ -1,5 +1,5 @@
 # Initial code was taken from https://www.geeksforgeeks.org/quad-tree/
-from ppg_planner.geometry import Point2d, SquareRegion, LineLike, GeometryDrawer, Line2d
+from ppg_planner.geometry import Point2d, SquareRegion, LineLike, GeometryDrawer, Line2d, PolyLike
 import numpy as np
 import cv2 as cv
 
@@ -31,7 +31,7 @@ class Quad(SquareRegion):
         self.bottom_right_quad = None
         self.bottom_left_quad = None
 
-        self.data = []
+        self.data = None
     
     def divide_by_line(self, line: LineLike):
         start_division = False
@@ -77,6 +77,7 @@ class Quad(SquareRegion):
 
     def visualize_quad_tree(self, drawer=None, canvas=None, color=(255,255,255)):
         write = False
+        color = self.data
         if drawer is None:
             write = True
             drawer = GeometryDrawer()
@@ -99,6 +100,28 @@ class Quad(SquareRegion):
             # canvas = cv.rotate(canvas, cv.ROTATE_180)
             cv.imwrite("/home/illarion/Pictures/result.png", canvas)
 
+    def include_zone(self, zone):
+        if self.divided:
+            self.top_left_quad.include_zone(zone)
+            self.top_right_quad.include_zone(zone)
+            self.bottom_right_quad.include_zone(zone)
+            self.bottom_left_quad.include_zone(zone)
+        else:
+            if zone.point_in_poly(self.center_point):
+                self.data = (255, 0, 0)
+            else:
+                if self.data is None:
+                    self.data = (0, 0, 255)
+
+    def exclude_zone(self, zone):
+        if self.divided:
+            self.top_left_quad.exclude_zone(zone)
+            self.top_right_quad.exclude_zone(zone)
+            self.bottom_right_quad.exclude_zone(zone)
+            self.bottom_left_quad.exclude_zone(zone)
+        else:
+            if zone.point_in_poly(self.center_point):
+                self.data = (0, 0, 255)
 
 # drawer = GeometryDrawer()
 # canvas = np.zeros((1000, 1000, 3))

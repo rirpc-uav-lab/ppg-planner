@@ -12,68 +12,59 @@ import ppg_planner.geometry as gm
 import ppg_planner.quad_tree as quad
 
 
-def point_in_poly(point: tuple, poly: list) -> bool:
-    """
-    Args:
-        point: (x, y)
-        poly: [(x1, y1), (x2, y2), ... , (xn, yn)]
-    """
 
-    if len(point) != 2:
-        print("Error! Point in poly")
-        return False
-    
-    crossed_sides = []
 
-    for i in range(len(poly) - 1):
-        if point[1] >= poly[i][1] and point[1] <= poly[i + 1][1]:
-            crossed_sides.append((poly[i], poly[i + 1]))
-        elif point[1] <= poly[i][1] and point[1] >= poly[i + 1][1]:
-            crossed_sides.append((poly[i], poly[i + 1]))
+    # def point_in_poly(self, point: Point2d) -> bool:
+    #     crossed_sides = []
 
-    j = len(poly) - 1
+    #     for i in range(len(self.sides)):
+    #         if point.y >= self.sides.p1.y and point.y <= self.sides.p2.y:
+    #             crossed_sides.append((self.sides.p1, self.sides.p2))
+    #         elif point.y <= self.sides.p1.y and point.y >= self.sides.p2.y:
+    #             crossed_sides.append((self.sides.p1, self.sides.p2))
 
-    if point[1] >= poly[0][1] and point[1] <= poly[j][1]:
-        crossed_sides.append((poly[0], poly[j]))
-    elif point[1] <= poly[0][1] and point[1] >= poly[j][1]:
-        crossed_sides.append((poly[0], poly[j]))
+    #     # j = len(self.sides) - 1
 
-    crossing_points = []
+    #     # if point.y >= self.sides[0][1] and point.y <= self.sides[j][1]:
+    #     #     crossed_sides.append((self.sides[0], self.sides[j]))
+    #     # elif point.y <= self.sides[0][1] and point.y >= self.sides[j][1]:
+    #     #     crossed_sides.append((self.sides[0], self.sides[j]))
 
-    for side in crossed_sides:
-        x1, y1 = side[0]
-        x2, y2 = side[1]
+    #     crossing_points = []
 
-        if y1 == y2:
-            continue
+    #     for side in crossed_sides:
+    #         x1, y1 = side.p1.x, side.p1.y 
+    #         x2, y2 = side.p2.x, side.p2.y
 
-        x = x1 + (point[1] - y1) * (x2 - x1) / (y2 - y1)
-        y = point[1]
+    #         if y1 == y2:
+    #             continue
 
-        if (x, y) not in crossing_points:
-            crossing_points.append((x, y))
+    #         x = x1 + (point.y - y1) * (x2 - x1) / (y2 - y1)
+    #         y = point.y
 
-    left_c, right_c = 0, 0
+    #         if (x, y) not in crossing_points:
+    #             crossing_points.append((x, y))
 
-    for cpoint in crossing_points:
-        xcp, ycp = cpoint
-        x, y = point
+    #     left_c, right_c = 0, 0
 
-        if x == xcp and y == ycp: 
-            return True
+    #     for cpoint in crossing_points:
+    #         xcp, ycp = cpoint
+    #         x, y = point
 
-        if xcp < x:
-            left_c += 1
-        elif xcp > x:
-            right_c += 1
-        else:
-            return True
+    #         if x == xcp and y == ycp: 
+    #             return True
 
-    if left_c % 2 == 1 and right_c % 2 == 1:
-        return True
-    else:
-        return False
+    #         if xcp < x:
+    #             left_c += 1
+    #         elif xcp > x:
+    #             right_c += 1
+    #         else:
+    #             return True
 
+    #     if left_c % 2 == 1 and right_c % 2 == 1:
+    #         return True
+    #     else:
+    #         return False
 
 
 class PPGPlannerNode(Node):
@@ -95,16 +86,6 @@ class PPGPlannerNode(Node):
             exclude_polygons_list.append(self.convert_point_list_to_poly(exclusion_zone.poly))
 
         points_raw = self.generate_points(zone_poly, exclude_polygons_list, request.step)
-
-
-        # for point_raw in points_raw:
-        #     point = Point32()
-        #     point.x = point_raw[0]
-        #     point.y = point_raw[1]
-        #     point.z = 0.0
-        #     response.point_grid.append(point)
-        
-        # print("finished")
 
         return response
 
@@ -152,6 +133,10 @@ class PPGPlannerNode(Node):
         for zone in exclude_poly_list:
             for line in zone.sides:
                 tree.divide_by_line(line)
+        
+        tree.include_zone(zone_poly)
+        for zone in exclude_poly_list:
+            tree.exclude_zone(zone)
 
         tree.visualize_quad_tree(color=(255, 0, 255))
 
