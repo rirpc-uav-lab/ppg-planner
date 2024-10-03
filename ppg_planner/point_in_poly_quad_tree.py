@@ -3,6 +3,7 @@
 import rclpy
 import numpy as np
 import cv2 as cv
+from pympler import asizeof
 from rclpy.node import Node
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import PolygonStamped, Point32
@@ -117,7 +118,7 @@ class PPGPlannerNode(Node):
         dy = zone_poly.y_max - zone_poly.y_min
 
         tree = None
-        max_dwnstp_lvl = 10
+        max_dwnstp_lvl = 7
         if dx > dy:
             side_size = dx
             center = gm.Point2d(x=zone_poly.x_min + side_size / 2, y=((zone_poly.y_max - zone_poly.y_min)/2 + zone_poly.y_min))

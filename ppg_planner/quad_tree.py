@@ -99,6 +99,32 @@ class Quad(SquareRegion):
         if write:
             # canvas = cv.rotate(canvas, cv.ROTATE_180)
             cv.imwrite("/home/illarion/Pictures/result.png", canvas)
+    
+    # def create_mask(self, drawer=None, canvas=None, color=(255,255,255)):
+    #     write = False
+    #     color = self.data
+    #     if drawer is None:
+    #         write = True
+    #         drawer = GeometryDrawer()
+    #         canvas = np.zeros((int(self.side_size * 100), int(self.side_size * 100), 3))
+    #     # frameinfo = getframeinfo(currentframe())
+    #     # print(frameinfo.filename, frameinfo.lineno)
+    #     if self.divided:
+    #         # frameinfo = getframeinfo(currentframe())
+    #         # print(frameinfo.filename, frameinfo.lineno)
+    #         self.top_left_quad.create_mask(drawer, canvas, color)
+    #         self.top_right_quad.create_mask(drawer, canvas, color)
+    #         self.bottom_right_quad.create_mask(drawer, canvas, color)
+    #         self.bottom_left_quad.create_mask(drawer, canvas, color)
+    #     else:
+    #         # frameinfo = getframeinfo(currentframe())
+    #         # print(frameinfo.filename, frameinfo.lineno)
+    #         drawer.draw_quad(self, canvas, color)
+        
+    #     if write:
+    #         # canvas = cv.rotate(canvas, cv.ROTATE_180)
+    #         cv.imwrite("/home/illarion/Pictures/result.png", canvas)
+    
 
     def include_zone(self, zone):
         if self.divided:
