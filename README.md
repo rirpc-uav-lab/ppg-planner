@@ -4,7 +4,8 @@ ROS2 package for point grid generation inside a polygon with exclusion zones. No
 
 *Warning!* Request response WIP.
 
-![image](https://github.com/user-attachments/assets/ec84d6fb-880a-4f72-bfc2-365da9fa53e2)
+![result](https://github.com/user-attachments/assets/bdef68de-4253-4ea0-8fee-908118fb819a)
+
 
 ## Installation
 
