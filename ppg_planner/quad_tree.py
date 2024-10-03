@@ -1,9 +1,8 @@
 # Initial code was taken from https://www.geeksforgeeks.org/quad-tree/
-from geometry import Point2d, SquareRegion, LineLike, GeometryDrawer, Line2d
+from ppg_planner.geometry import Point2d, SquareRegion, LineLike, GeometryDrawer, Line2d
 import numpy as np
 import cv2 as cv
 
-from inspect import currentframe, getframeinfo
 
 
 
@@ -57,13 +56,10 @@ class Quad(SquareRegion):
                     self.bottom_right_quad = Quad(Point2d(x=self.center_point.x - self.side_size / 4, y=self.center_point.y - self.side_size / 4), self.side_size /2 , self.max_size_downstep_level, self.current_size_downstep_level + 1)
                     self.bottom_left_quad = Quad(Point2d(x=self.center_point.x - self.side_size / 4, y=self.center_point.y + self.side_size / 4), self.side_size /2 , self.max_size_downstep_level, self.current_size_downstep_level + 1)
 
-                    print(f"self.current_size_downstep_level = {self.current_size_downstep_level}")
-                    print(f"self.max_size_downstep_level = {self.max_size_downstep_level}")
 
                     if self.current_size_downstep_level + 1 < self.max_size_downstep_level:
                         # frameinfo = getframeinfo(currentframe())
                         # print(frameinfo.filename, frameinfo.lineno)
-                        print("Going down")
                         self.top_left_quad.divide_by_line(line)
                         self.top_right_quad.divide_by_line(line)
                         self.bottom_right_quad.divide_by_line(line)
@@ -79,42 +75,44 @@ class Quad(SquareRegion):
                     self.bottom_right_quad.divide_by_line(line)
                     self.bottom_left_quad.divide_by_line(line)
 
-    def visualize_quad_tree(self, drawer: GeometryDrawer, frame, color):
+    def visualize_quad_tree(self, drawer=None, canvas=None, color=(255,255,255)):
+        write = False
+        if drawer is None:
+            write = True
+            drawer = GeometryDrawer()
+            canvas = np.zeros((int(self.side_size), int(self.side_size), 3))
         # frameinfo = getframeinfo(currentframe())
         # print(frameinfo.filename, frameinfo.lineno)
         if self.divided:
             # frameinfo = getframeinfo(currentframe())
             # print(frameinfo.filename, frameinfo.lineno)
-            print("Printing one leaf")
-            self.top_left_quad.visualize_quad_tree(drawer, frame, color)
-            self.top_right_quad.visualize_quad_tree(drawer, frame, color)
-            self.bottom_right_quad.visualize_quad_tree(drawer, frame, color)
-            self.bottom_left_quad.visualize_quad_tree(drawer, frame, color)
-
-            self.top_left_quad.center_point.print_info()
-            self.top_right_quad.center_point.print_info()
-            self.bottom_right_quad.center_point.print_info()
-            self.bottom_left_quad.center_point.print_info()
-
+            self.top_left_quad.visualize_quad_tree(drawer, canvas, color)
+            self.top_right_quad.visualize_quad_tree(drawer, canvas, color)
+            self.bottom_right_quad.visualize_quad_tree(drawer, canvas, color)
+            self.bottom_left_quad.visualize_quad_tree(drawer, canvas, color)
         else:
             # frameinfo = getframeinfo(currentframe())
             # print(frameinfo.filename, frameinfo.lineno)
-            drawer.draw_square(self, frame, color)
+            drawer.draw_square(self, canvas, color)
+        
+        if write:
+            # canvas = cv.rotate(canvas, cv.ROTATE_180)
+            cv.imwrite("/home/illarion/Pictures/result.png", canvas)
 
 
-drawer = GeometryDrawer()
-canvas = np.zeros((1000, 1000, 3))
+# drawer = GeometryDrawer()
+# canvas = np.zeros((1000, 1000, 3))
 
-tree = Quad(Point2d(500, 500), 1000, 9)
-line = Line2d(Point2d(x=400, y=400), Point2d(x=700, y=500))
+# tree = Quad(Point2d(500, 500), 1000, 9)
+# line = Line2d(Point2d(x=400, y=400), Point2d(x=700, y=500))
 
-tree.divide_by_line(line)
-tree.visualize_quad_tree(drawer, canvas, (255, 0, 0))
-drawer.draw_line(line, canvas, (0,0,255))
+# tree.divide_by_line(line)
+# tree.visualize_quad_tree(drawer, canvas, (255, 0, 0))
+# drawer.draw_line(line, canvas, (0,0,255))
 
 
-canvas = cv.rotate(canvas, cv.ROTATE_180)
-cv.imwrite("result.png", canvas)
+# canvas = cv.rotate(canvas, cv.ROTATE_180)
+# cv.imwrite("result.png", canvas)
 
 
 

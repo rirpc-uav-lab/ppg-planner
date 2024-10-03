@@ -27,6 +27,21 @@ class LineLike(ABC):
 class PolyLike(ABC):
     def __init__(self, lines: list[LineLike]):
         self.sides  = lines
+        self.x_min = None
+        self.y_min = None
+        self.x_max = None
+        self.y_max = None
+
+        for side in self.sides:
+            if self.x_min is None or side.p1.x < self.x_min:
+                self.x_min = side.p1.x
+            if self.y_min is None or side.p1.y < self.y_min:
+                self.y_min = side.p1.y
+            if self.x_max is None or side.p1.x > self.x_max:
+                self.x_max = side.p1.x
+            if self.y_max is None or side.p1.y > self.y_max:
+                self.y_max = side.p1.y
+        
 
     @abstractmethod
     def intersect_poly(self, poly):
@@ -42,7 +57,6 @@ class PolyLike(ABC):
                 intersections.append(intersection)
 
         return intersections
-
 
 
 class Line2d(LineLike):
@@ -150,6 +164,13 @@ class SquareRegion(PolyLike):
         self.bottom_left_p.print_info()
 
 
+class Polygon(PolyLike):
+    def __init__(self, lines: list[Line2d]):
+        super().__init__(lines=lines)
+    
+    def intersect_poly(self, poly):
+        quit(404)
+
 
 class GeometryDrawer:
     def __init__(self):
@@ -162,7 +183,7 @@ class GeometryDrawer:
         cv.circle(frame, (int(point.x), int(point.y)), 3, color, 2)
     
     def draw_square(self, square: SquareRegion, frame, color):
-        cv.rectangle(frame, (int(square.top_left_p.x), int(square.top_left_p.y)), (int(square.bottom_right_p.x), int(square.bottom_right_p.y)), color, 1)
+        cv.rectangle(frame, (int(square.top_left_p.x), frame.shape[0] - int(square.top_left_p.y)), (int(square.bottom_right_p.x), frame.shape[0] - int(square.bottom_right_p.y)), color, 1)
 
 
 
