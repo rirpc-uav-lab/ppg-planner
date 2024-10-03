@@ -105,12 +105,12 @@ class Quad(SquareRegion):
 drawer = GeometryDrawer()
 canvas = np.zeros((1000, 1000, 3))
 
-tree = Quad(Point2d(500, 500), 100, 5)
-line = Line2d(Point2d(x=300, y=400), Point2d(x=500, y=500))
-drawer.draw_line(line, canvas, (0,0,255))
+tree = Quad(Point2d(500, 500), 1000, 9)
+line = Line2d(Point2d(x=400, y=400), Point2d(x=700, y=500))
 
 tree.divide_by_line(line)
 tree.visualize_quad_tree(drawer, canvas, (255, 0, 0))
+drawer.draw_line(line, canvas, (0,0,255))
 
 
 canvas = cv.rotate(canvas, cv.ROTATE_180)
