@@ -240,7 +240,12 @@ class GeometryDrawer:
         cv.circle(frame, (int(point.x), frame.shape[0] - int(point.y)), 3, color, 2)
     
     def draw_square(self, square: SquareRegion, frame, color):
-        cv.rectangle(frame, (int(square.top_left_p.x), frame.shape[0] - int(square.top_left_p.y)), (int(square.bottom_right_p.x), frame.shape[0] - int(square.bottom_right_p.y)), color, 1)
+        top_left = (frame.shape[1] - int(square.bottom_right_p.x), int(square.top_left_p.y))
+        bottom_right = (frame.shape[1] - int(square.top_left_p.x), int(square.bottom_right_p.y))
+
+        # Draw the rectangle
+        cv.rectangle(frame, top_left, bottom_right, color, 1)
+        # cv.rectangle(frame, (int(square.top_left_p.x), frame.shape[0] - int(square.top_left_p.y)), (int(square.bottom_right_p.x), frame.shape[0] - int(square.bottom_right_p.y)), color, 1)
 
     # def draw_quad(self, quad, frame, color):
     #     cv.rectangle(frame, (100 * int(square.top_left_p.x), 100 * (frame.shape[0] - int(square.top_left_p.y))), (100 * int(square.bottom_right_p.x), 100 * (frame.shape[0] - int(square.bottom_right_p.y))), color, -1)

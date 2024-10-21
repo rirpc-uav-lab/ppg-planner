@@ -81,20 +81,33 @@ class TestClient(Node):
 
 
     def timer_callback(self):
-        step = 10
-        poly = [(0, 100), (300,700), (600,500), (300, 40), (100,50), (0, 100),]
+        step = 10.0
+        # poly_list = [[(0, 100), (300,700), (600,500), (300, 40), (100,50), (-100, 100)], [(-100,0), (-100,50), (50, 50), (50, 0), (-100,0)]]
+        poly_list = [[(0, 100), (10, 100), (10, 0), (0, 0), (0, 100)]]
         exclude_poly_list = [[(100,100), (100,200), (200, 300), (210, 100), (100,100)], [(230, 200), (300, 295), (301, 205), (230,200)]] # , [(230, 200), (240, 300), (300, 295), (300, 205), (230,200)]
 
         print("generatinig request")
 
         request = PolyGrid.Request()
         request.step = step
-        for point_raw in poly:
-            point = Point32()
-            point.x = float(point_raw[0])
-            point.y = float(point_raw[1])
-            point.z = float(0)
-            request.zone.poly.append(point)
+
+        # for point_raw in poly_list:
+        #     point = Point32()
+        #     point.x = float(point_raw[0])
+        #     point.y = float(point_raw[1])
+        #     point.z = float(0)
+        #     request.zone.poly_list.append(point)
+
+        for poly in poly_list:
+            in_zone_cooked = Poly()
+            for point_raw in poly:
+                point = Point32()
+                point.x = float(point_raw[0])
+                point.y = float(point_raw[1])
+                point.z = float(0)
+                in_zone_cooked.poly.append(point)
+            request.zone.append(in_zone_cooked)
+
 
         for ex_zone in exclude_poly_list:
             ex_zone_cooked = Poly()

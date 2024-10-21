@@ -5,6 +5,7 @@ import numpy as np
 import cv2 as cv
 from pympler import asizeof
 from rclpy.node import Node
+from copy import copy
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import PolygonStamped, Point32
 from ppg_planner_interfaces.msg import Poly
@@ -80,13 +81,17 @@ class PPGPlannerNode(Node):
     def ppg_service_clb(self, request, response):
         self.get_logger().error("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 
-        zone_poly = self.convert_point_list_to_poly(request.zone.poly)
+        include_polygons_list = []
+        for zone in request.zone:
+            include_polygons_list.append(self.convert_point_list_to_poly(zone.poly))
         
         exclude_polygons_list = []
         for exclusion_zone in request.exclusion_zones:
             exclude_polygons_list.append(self.convert_point_list_to_poly(exclusion_zone.poly))
 
-        points_raw = self.generate_points(zone_poly, exclude_polygons_list, request.step)
+        print(f"request.step = {request.step}")
+
+        points_raw = self.generate_points(include_polygons_list, exclude_polygons_list, request.step)
 
         return response
 
@@ -105,8 +110,52 @@ class PPGPlannerNode(Node):
                 poly_lines.append(line)
         return gm.Polygon(lines=poly_lines)
 
+    def get_downstep_level_by_side_size(self, side_size, goal_side_size):
+        counter = 0
+        side_size_tmp = float(copy(side_size))
+        goal_side_size_tmp = float(copy(goal_side_size))
+        while (side_size_tmp > goal_side_size_tmp):
+            side_size_tmp /= 2
+            counter += 1
+        return counter
+    
+    def get_poly_list_maxs_and_mins(self, poly_list: list[gm.Polygon]):
+        """
+        Calculate the maximum and minimum x and y values from a list of polygons.
 
-    def generate_points(self, zone_poly: gm.Polygon, exclude_poly_list: list[gm.Polygon], step):
+        Args:
+            poly_list (list[gm.Polygon]): List of polygons to extract max and min values from.
+
+        Returns:
+            tuple: A tuple containing the maximum x, minimum x, maximum y, and minimum y values.
+        """
+        x_max = None
+        x_min = None
+        y_max = None
+        y_min = None
+
+        for poly in poly_list:
+            if x_max is None:
+                x_max = poly.x_max
+                x_min = poly.x_min
+                y_max = poly.y_max
+                y_min = poly.y_min
+
+            if poly.x_max > x_max:
+                x_max = poly.x_max
+            if poly.x_min > x_min:
+                x_min = poly.x_min
+            if poly.y_max > y_max:
+                y_max = poly.y_max
+            if poly.y_min > y_min:
+                y_min = poly.y_min
+
+        self.get_logger().info(f"x_max: {x_max}, x_min: {x_min}, y_max: {y_max}, y_min: {y_min}")
+
+        return x_max, x_min, y_max, y_min
+
+
+    def generate_points(self, zone_poly: list[gm.Polygon], exclude_poly_list: list[gm.Polygon], step):
         # """
         # Args:
         #     step: float
@@ -115,123 +164,45 @@ class PPGPlannerNode(Node):
         # """
         start_time = time.time()
 
-        dx = zone_poly.x_max - zone_poly.x_min
-        dy = zone_poly.y_max - zone_poly.y_min
+        x_max, x_min, y_max, y_min = self.get_poly_list_maxs_and_mins(zone_poly)
+        self.get_logger().info(f"x_max: {x_max}, x_min: {x_min}, y_max: {y_max}, y_min: {y_min}")
+
+        dx = x_max - x_min
+        dy = y_max - y_min
+        self.get_logger().info(f"dx: {dx}, dy: {dy}")
 
         tree = None
-        max_dwnstp_lvl = step
         if dx > dy:
+            max_dwnstp_lvl = self.get_downstep_level_by_side_size(dx, float(step))
             side_size = dx
-            center = gm.Point2d(x=zone_poly.x_min + side_size / 2, y=((zone_poly.y_max - zone_poly.y_min)/2 + zone_poly.y_min))
+            center = gm.Point2d(x=x_min + side_size / 2, y=(dy/2 + y_min))
             tree = quad.Quad(center_point=center, side_size=side_size, max_size_downstep_level=max_dwnstp_lvl)
         else:
+            max_dwnstp_lvl = self.get_downstep_level_by_side_size(dy, float(step))
             side_size = dy
-            center = gm.Point2d(x=((zone_poly.x_max - zone_poly.x_min)/2 + zone_poly.x_min), y=zone_poly.y_min + side_size / 2)
+            center = gm.Point2d(x=(dx/2 + x_min), y=y_min + side_size / 2)
             tree = quad.Quad(center_point=center, side_size=side_size, max_size_downstep_level=max_dwnstp_lvl)
-        for line in zone_poly.sides:
-            tree.divide_by_line(line)
-        
+
+        for zone in zone_poly:
+            for line in zone.sides:
+                tree.divide_by_line(line)
         for zone in exclude_poly_list:
             for line in zone.sides:
                 tree.divide_by_line(line)
         
-        tree.include_zone(zone_poly)
+        for zone in zone_poly:
+            tree.include_zone(zone)
+        for zone in exclude_poly_list:
+            tree.exclude_zone(zone)
+        tree.divide_until_all_quads_are_smallest_size(divide_only_included=True)
+        for zone in zone_poly:
+            tree.include_zone(zone)
         for zone in exclude_poly_list:
             tree.exclude_zone(zone)
 
         self.get_logger().warn(f"time = {time.time() - start_time}")
         print(f"memory = {asizeof.asizeof(tree) / 8 / 1024 / 1024} Mb")
         tree.visualize_quad_tree(color=(255, 0, 255))
-
-
-
-
-        # poly_msg = PolygonStamped()
-        # poly_msg.header.frame_id = "map"
-        # poly_msg.header.stamp = self.get_clock().now().to_msg()
-
-        # for pt in poly:
-        #     pt_msg = Point32()
-        #     pt_msg.x = float(pt[0])
-        #     pt_msg.y = float(pt[1])
-        #     pt_msg.z = 0.0
-        #     poly_msg.polygon.points.append(pt_msg)
-
-        # self.poly_publisher.publish(poly_msg)
-
-        # for ex_poly in exclude_poly_list:
-        #     poly_msg = PolygonStamped()
-        #     poly_msg.header.frame_id = "map"
-        #     poly_msg.header.stamp = self.get_clock().now().to_msg()
-        #     for pt in ex_poly:
-        #         pt_msg = Point32()
-        #         pt_msg.x = float(pt[0])
-        #         pt_msg.y = float(pt[1])
-        #         pt_msg.z = 0.0
-        #         poly_msg.polygon.points.append(pt_msg)
-        #     self.poly_publisher.publish(poly_msg)
-        
-        # x_min, y_min = None, None
-        # x_max, y_max = None, None
-
-        # for side in poly:
-        #     if x_min is None or side[0] < x_min:
-        #         x_min = side[0]
-        #     if y_min is None or side[1] < y_min:
-        #         y_min = side[1]
-        #     if x_max is None or side[0] > x_max:
-        #         x_max = side[0]
-        #     if y_max is None or side[1] > y_max:
-        #         y_max = side[1]
-        
-        # points_in_area = []
-        # y_curr, x_curr = y_min, x_min
-        # while y_curr <= y_max:
-        #     while x_curr <= x_max:
-        #         if point_in_poly((x_curr, y_curr), poly=poly):
-        #             include = True
-        #             for excluded_poly in exclude_poly_list:
-        #                 if point_in_poly((x_curr, y_curr), excluded_poly):
-        #                     include = False
-        #                     break
-        #             if include:
-        #                 points_in_area.append((x_curr, y_curr))
-        #         x_curr += step
-        #     y_curr += step
-        #     x_curr = x_min
-
-        # array = MarkerArray()
-        # for i in range(len(points_in_area)):
-        #     msg = Marker()
-
-        #     msg.type = 2
-        #     msg.id = i
-
-        #     msg.scale.x = 0.1
-        #     msg.scale.y = 0.1
-        #     msg.scale.z = 0.1
-
-        #     msg.color.r = 1.0
-        #     msg.color.g = 0.0
-        #     msg.color.b = 0.0
-        #     msg.color.a = 1.0
-
-        #     msg.pose.position.x = float(points_in_area[i][0])
-        #     msg.pose.position.y = float(points_in_area[i][1])
-        #     msg.pose.position.z = 0.0
-
-        #     msg.pose.orientation.x = 0.0 
-        #     msg.pose.orientation.y = 0.0
-        #     msg.pose.orientation.z = 0.0 
-
-        #     msg.header.frame_id = "map"
-        #     msg.header.stamp = self.get_clock().now().to_msg()
-        #     array.markers.append(msg)
-
-        # self.points_publisher.publish(array)
-        # print("Published points")
-
-        # return points_in_area
 
 
 def main(args=None):
