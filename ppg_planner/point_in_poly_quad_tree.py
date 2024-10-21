@@ -1,5 +1,5 @@
 # Implementing an algorithm from https://alienryderflex.com/polygon/
-
+import time
 import rclpy
 import numpy as np
 import cv2 as cv
@@ -113,12 +113,13 @@ class PPGPlannerNode(Node):
         #     poly: list - [(x1, y1), (x2, y2), ... , (xn, yn)]
         #     exclude_poly_list: list - [poly_1, poly_2, ... , poly_n]
         # """
+        start_time = time.time()
 
         dx = zone_poly.x_max - zone_poly.x_min
         dy = zone_poly.y_max - zone_poly.y_min
 
         tree = None
-        max_dwnstp_lvl = 7
+        max_dwnstp_lvl = step
         if dx > dy:
             side_size = dx
             center = gm.Point2d(x=zone_poly.x_min + side_size / 2, y=((zone_poly.y_max - zone_poly.y_min)/2 + zone_poly.y_min))
@@ -127,7 +128,6 @@ class PPGPlannerNode(Node):
             side_size = dy
             center = gm.Point2d(x=((zone_poly.x_max - zone_poly.x_min)/2 + zone_poly.x_min), y=zone_poly.y_min + side_size / 2)
             tree = quad.Quad(center_point=center, side_size=side_size, max_size_downstep_level=max_dwnstp_lvl)
-
         for line in zone_poly.sides:
             tree.divide_by_line(line)
         
@@ -139,6 +139,8 @@ class PPGPlannerNode(Node):
         for zone in exclude_poly_list:
             tree.exclude_zone(zone)
 
+        self.get_logger().warn(f"time = {time.time() - start_time}")
+        print(f"memory = {asizeof.asizeof(tree) / 8 / 1024 / 1024} Mb")
         tree.visualize_quad_tree(color=(255, 0, 255))
 
 

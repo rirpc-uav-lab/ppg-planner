@@ -1,5 +1,4 @@
 # Implementing an algorithm from https://alienryderflex.com/polygon/
-
 import rclpy
 from rclpy.node import Node
 from visualization_msgs.msg import Marker, MarkerArray
@@ -82,7 +81,7 @@ class TestClient(Node):
 
 
     def timer_callback(self):
-        step = 0.15
+        step = 10
         poly = [(0, 100), (300,700), (600,500), (300, 40), (100,50), (0, 100),]
         exclude_poly_list = [[(100,100), (100,200), (200, 300), (210, 100), (100,100)], [(230, 200), (300, 295), (301, 205), (230,200)]] # , [(230, 200), (240, 300), (300, 295), (300, 205), (230,200)]
 
