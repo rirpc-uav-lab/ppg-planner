@@ -12,61 +12,34 @@ from ppg_planner_interfaces.msg import Poly
 from ppg_planner_interfaces.srv import PolyGrid
 import ppg_planner.geometry as gm
 import ppg_planner.quad_tree as quad
+import ppg_planner.planners as planners
 
 
 
+def visualize_node_graph(node_graph, canvas_size=1000, node_radius=2, line_thickness=1):
+    # Create a black canvas
+    canvas = np.zeros((canvas_size, canvas_size, 3), dtype=np.uint8)
 
-    # def point_in_poly(self, point: Point2d) -> bool:
-    #     crossed_sides = []
 
-    #     for i in range(len(self.sides)):
-    #         if point.y >= self.sides.p1.y and point.y <= self.sides.p2.y:
-    #             crossed_sides.append((self.sides.p1, self.sides.p2))
-    #         elif point.y <= self.sides.p1.y and point.y >= self.sides.p2.y:
-    #             crossed_sides.append((self.sides.p1, self.sides.p2))
+    # Draw edges
+    for i, connections in node_graph.node_incidency_matrix.items():
+        node1 = node_graph.node_list[i]
+        center1 = (int(node1.center_point.x), int(node1.center_point.y))
+        for j, distance in connections.items():
+            node2 = node_graph.node_list[j]
+            center2 = (int(node2.center_point.x), int(node2.center_point.y))
+            cv.line(canvas, center1, center2, (255, 0, 0), line_thickness)  # Draw edge as a white line
+    # Draw nodes
+    for node in node_graph.node_list:
+        center = (int(node.center_point.x), int(node.center_point.y))
+        cv.circle(canvas, center, node_radius, (0, 255, 0), -1)  # Draw node as a green circle
 
-    #     # j = len(self.sides) - 1
+    # Flip the canvas vertically to match the coordinate system
+    canvas = cv.flip(canvas, 0)
 
-    #     # if point.y >= self.sides[0][1] and point.y <= self.sides[j][1]:
-    #     #     crossed_sides.append((self.sides[0], self.sides[j]))
-    #     # elif point.y <= self.sides[0][1] and point.y >= self.sides[j][1]:
-    #     #     crossed_sides.append((self.sides[0], self.sides[j]))
-
-    #     crossing_points = []
-
-    #     for side in crossed_sides:
-    #         x1, y1 = side.p1.x, side.p1.y 
-    #         x2, y2 = side.p2.x, side.p2.y
-
-    #         if y1 == y2:
-    #             continue
-
-    #         x = x1 + (point.y - y1) * (x2 - x1) / (y2 - y1)
-    #         y = point.y
-
-    #         if (x, y) not in crossing_points:
-    #             crossing_points.append((x, y))
-
-    #     left_c, right_c = 0, 0
-
-    #     for cpoint in crossing_points:
-    #         xcp, ycp = cpoint
-    #         x, y = point
-
-    #         if x == xcp and y == ycp: 
-    #             return True
-
-    #         if xcp < x:
-    #             left_c += 1
-    #         elif xcp > x:
-    #             right_c += 1
-    #         else:
-    #             return True
-
-    #     if left_c % 2 == 1 and right_c % 2 == 1:
-    #         return True
-    #     else:
-    #         return False
+    cv.imshow("Node Graph", canvas)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
 
 
 class PPGPlannerNode(Node):
@@ -194,15 +167,28 @@ class PPGPlannerNode(Node):
             tree.include_zone(zone)
         for zone in exclude_poly_list:
             tree.exclude_zone(zone)
-        tree.divide_until_all_quads_are_smallest_size(divide_only_included=True)
+        # tree.divide_until_all_quads_are_smallest_size(divide_only_included=True)
         for zone in zone_poly:
             tree.include_zone(zone)
         for zone in exclude_poly_list:
             tree.exclude_zone(zone)
 
+        min_side_size = tree.get_min_side_size()
+        nd, i_mx = tree.generate_included_incidency_matrix(min_side_size)
+
+        a = planners.NodeGraph(nd, i_mx)
+
+        # print(f"memory = {asizeof.asizeof(tree) / 8 / 1024 / 1024} Mb")
+        # print(f"tree.get_included_node_list().size() = {")
+
+        # a = planners.NodeGraph(tree.get_included_node_list())
         self.get_logger().warn(f"time = {time.time() - start_time}")
-        print(f"memory = {asizeof.asizeof(tree) / 8 / 1024 / 1024} Mb")
+        visualize_node_graph(a)
+        
         tree.visualize_quad_tree(color=(255, 0, 255))
+
+
+
 
 
 def main(args=None):
