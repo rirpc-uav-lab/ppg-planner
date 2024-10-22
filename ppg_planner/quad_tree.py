@@ -3,6 +3,7 @@ from ppg_planner.geometry import Point2d, SquareRegion, LineLike, GeometryDrawer
 import numpy as np
 import math
 import cv2 as cv
+from getpass import getuser
 
 
 # The objects that we want stored in the quadtree
@@ -152,7 +153,7 @@ class Quad(SquareRegion):
         
         if write:
             # canvas = cv.rotate(canvas, cv.ROTATE_180)
-            cv.imwrite("/home/illarion/Pictures/result.png", canvas)
+            cv.imwrite(f"/home/{getuser()}/Pictures/result.png", canvas)
     
     def include_zone(self, zone):
         if self.divided:
