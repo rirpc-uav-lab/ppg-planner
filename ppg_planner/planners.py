@@ -32,7 +32,7 @@ class NodeGraph:
 
     def __init__(self, node_list, node_incidency_matrix):
         self.node_list = node_list # n x n array, where n is the number of nodes
-        self.node_incidency_matrix = {} # calculate
+        self.node_incidency_matrix = node_incidency_matrix # calculate
 
 
         def generate_incidency_from_quad_list(self, node_list: list[quad.Quad]):

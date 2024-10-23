@@ -3,10 +3,8 @@ import time
 import rclpy
 import numpy as np
 import cv2 as cv
-from pympler import asizeof
 from rclpy.node import Node
 from copy import copy
-from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import PolygonStamped, Point32
 from ppg_planner_interfaces.msg import Poly
 from ppg_planner_interfaces.srv import PolyGrid
@@ -14,32 +12,42 @@ import ppg_planner.geometry as gm
 import ppg_planner.quad_tree as quad
 import ppg_planner.planners as planners
 
+from getpass import getuser
+from visualization_msgs.msg import Marker, MarkerArray
+from pympler import asizeof
 
 
 def visualize_node_graph(node_graph, canvas_size=1000, node_radius=2, line_thickness=1):
     # Create a black canvas
     canvas = np.zeros((canvas_size, canvas_size, 3), dtype=np.uint8)
 
-
     # Draw edges
     for i, connections in node_graph.node_incidency_matrix.items():
         node1 = node_graph.node_list[i]
-        center1 = (int(node1.center_point.x), int(node1.center_point.y))
+        center1 = (int(node1.x), int(node1.y))
         for j, distance in connections.items():
-            node2 = node_graph.node_list[j]
-            center2 = (int(node2.center_point.x), int(node2.center_point.y))
-            cv.line(canvas, center1, center2, (255, 0, 0), line_thickness)  # Draw edge as a white line
+            if j in node_graph.node_list:
+                node2 = node_graph.node_list[j]
+                center2 = (int(node2.x), int(node2.y))
+                cv.line(canvas, center1, center2, (255, 0, 0), line_thickness)  # Draw edge as a white line
+            else:
+                x, y = j.split(sep=",")
+                center2 = (int(float(x)), int(float(y)))
+                cv.line(canvas, center1, center2, (0, 0, 255), line_thickness)  # Draw edge as a white line
     # Draw nodes
-    for node in node_graph.node_list:
-        center = (int(node.center_point.x), int(node.center_point.y))
+    for uid, node in node_graph.node_list.items():
+        center = (int(node.x), int(node.y))
         cv.circle(canvas, center, node_radius, (0, 255, 0), -1)  # Draw node as a green circle
 
     # Flip the canvas vertically to match the coordinate system
-    canvas = cv.flip(canvas, 0)
+    canvas = cv.flip(canvas, -1)
+
+    cv.imwrite(f"/home/{getuser()}/Pictures/result_graph.png", canvas)    
 
     cv.imshow("Node Graph", canvas)
     cv.waitKey(0)
     cv.destroyAllWindows()
+    return canvas
 
 
 class PPGPlannerNode(Node):
