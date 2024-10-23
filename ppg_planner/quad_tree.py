@@ -133,13 +133,16 @@ class Quad(SquareRegion):
                     self.top_right_quad.divide_until_all_quads_are_smallest_size()
                     self.bottom_right_quad.divide_until_all_quads_are_smallest_size()
                     self.bottom_left_quad.divide_until_all_quads_are_smallest_size()
+
+
+
     def visualize_quad_tree(self, drawer=None, canvas=None, color=(255,255,255)):
         write = False
         color = self.data
         if drawer is None:
             write = True
             drawer = GeometryDrawer()
-            canvas = np.zeros((math.ceil(self.side_size), math.ceil(self.side_size), 3))
+            canvas = np.zeros((math.ceil(self.side_size), math.ceil(self.side_size), 3), dtype=np.uint8)
         # frameinfo = getframeinfo(currentframe())
         # print(frameinfo.filename, frameinfo.lineno)
         if self.divided:
@@ -261,6 +264,7 @@ class Quad(SquareRegion):
                 incidency_mx.update(tr_inmx)
                 node_dict.update(bl_nd)
                 node_dict.update(tr_nd)
+
 
             # случаи, когда три из квадов пустые
             if tl_nd is not None:
@@ -552,145 +556,145 @@ class Quad(SquareRegion):
                     for j in range(side_index):
                         node = Point2d(x=(self.center_point.x - self.side_size / 2) + (i * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (j * min_side_size + 0.5 * min_side_size))
                         uid = f"{node.x},{node.y}"
-                        node_dict.update({uid: node})
-                        # node_dict[uid] = node
+                        # node_dict.update({uid: node})
+                        node_dict[uid] = node
                         incidency_mx[uid] = {}
                         
                         # print(f"side_index = {side_index}\n")
                         # print(f"range(side_index) = {list(range(side_index))}\n")
+                        if counter != 0:
+                            if (i, j) == (0,0) and False: # bottom right corner
+                                # pass
+                                ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size))
+                                uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
+                                ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size))
+                                uid2 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
+                                diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size))
+                                uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
+                                incidency_mx[uid][uid1] = min_side_size
+                                incidency_mx[uid][uid2] = min_side_size
+                                incidency_mx[uid][uid3] = diag_distance
+                            # if (i, j) == (side_index,0):
+                            elif (i, j) == (side_index,0) and False: # top right corner
+                                ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + (side_index * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size))
+                                uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
+                                ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size))
+                                uid2 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
+                                diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size))
+                                uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
+                                incidency_mx[uid][uid1] = min_side_size
+                                incidency_mx[uid][uid2] = min_side_size
+                                incidency_mx[uid][uid3] = diag_distance
+                            elif (i, j) == (0,side_index) and False: # bottom left corner
+                                ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index * min_side_size + 0.5 * min_side_size))
+                                uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
+                                ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size))
+                                uid2 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
+                                diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size))
+                                uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
+                                incidency_mx[uid][uid1] = min_side_size
+                                incidency_mx[uid][uid2] = min_side_size
+                                incidency_mx[uid][uid3] = diag_distance
+                            elif (i, j) == (side_index,side_index) and False: # top left corner
+                                ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index * min_side_size + 0.5 * min_side_size))
+                                uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
+                                ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + (side_index * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size))
+                                uid2 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
+                                diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size))
+                                uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
+                                incidency_mx[uid][uid1] = min_side_size
+                                incidency_mx[uid][uid2] = min_side_size
+                                incidency_mx[uid][uid3] = diag_distance
+                            elif (j == 0 and i != 0 and i != side_index) and False: # right side
+                                ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + (i * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size))
+                                uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
+                                diag_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i+1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size))
+                                uid2 = f"{diag_neighbour2.x},{diag_neighbour2.y}"
+                                diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i-1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size))
+                                uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
+                                ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i+1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size))
+                                uid4 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
+                                ortho_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i-1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size))
+                                uid5 = f"{ortho_neighbour3.x},{ortho_neighbour3.y}"
+                                incidency_mx[uid][uid1] = min_side_size
+                                incidency_mx[uid][uid2] = diag_distance
+                                incidency_mx[uid][uid3] = diag_distance
+                                incidency_mx[uid][uid4] = min_side_size
+                                incidency_mx[uid][uid5] = min_side_size
+                            elif (i == side_index and j != 0 and j != side_index) and False: # top side
+                                ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((side_index - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (j * min_side_size + 0.5 * min_side_size))
+                                uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
+                                diag_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((side_index - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 1) * min_side_size + 0.5 * min_side_size))
+                                uid2 = f"{diag_neighbour2.x},{diag_neighbour2.y}"
+                                diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((side_index - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j - 1) * min_side_size + 0.5 * min_side_size))
+                                uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
+                                ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((side_index) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 1) * min_side_size + 0.5 * min_side_size))
+                                uid4 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
+                                ortho_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((side_index) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j - 1) * min_side_size + 0.5 * min_side_size))
+                                uid5 = f"{ortho_neighbour3.x},{ortho_neighbour3.y}"
+                                incidency_mx[uid][uid1] = min_side_size
+                                incidency_mx[uid][uid2] = diag_distance
+                                incidency_mx[uid][uid3] = diag_distance
+                                incidency_mx[uid][uid4] = min_side_size
+                                incidency_mx[uid][uid5] = min_side_size
+                            elif (j == side_index and i != 0 and i != side_index) and False: # left side
+                                ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + (i * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((side_index - 1) * min_side_size + 0.5 * min_side_size))
+                                uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
+                                diag_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i + 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((side_index - 1) * min_side_size + 0.5 * min_side_size))
+                                uid2 = f"{diag_neighbour2.x},{diag_neighbour2.y}"
+                                diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((side_index - 1) * min_side_size + 0.5 * min_side_size))
+                                uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
+                                ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i + 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index * min_side_size + 0.5 * min_side_size))
+                                uid4 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
+                                ortho_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index * min_side_size + 0.5 * min_side_size))
+                                uid5 = f"{ortho_neighbour3.x},{ortho_neighbour3.y}"
+                                incidency_mx[uid][uid1] = min_side_size
+                                incidency_mx[uid][uid4] = min_side_size
+                                incidency_mx[uid][uid5] = min_side_size
+                                incidency_mx[uid][uid2] = diag_distance
+                                incidency_mx[uid][uid3] = diag_distance
+                            elif (i == 0 and j != 0 and j != side_index) and False: # bottom side
+                                ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (j * min_side_size + 0.5 * min_side_size))
+                                uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
+                                diag_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 1) * min_side_size + 0.5 * min_side_size))
+                                uid2 = f"{diag_neighbour2.x},{diag_neighbour2.y}"
+                                diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j - 1) * min_side_size + 0.5 * min_side_size))
+                                uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
+                                ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 1) * min_side_size + 0.5 * min_side_size))
+                                uid4 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
+                                ortho_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j - 1) * min_side_size + 0.5 * min_side_size))
+                                uid5 = f"{ortho_neighbour3.x},{ortho_neighbour3.y}"
+                                incidency_mx[uid][uid1] = min_side_size
+                                incidency_mx[uid][uid4] = min_side_size
+                                incidency_mx[uid][uid5] = min_side_size
+                                incidency_mx[uid][uid2] = diag_distance
+                                incidency_mx[uid][uid3] = diag_distance
+                            else: # inner node
+                                ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i + 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 0) * min_side_size + 0.5 * min_side_size))
+                                uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
+                                ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 0) * min_side_size + 0.5 * min_side_size))
+                                uid2 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
+                                ortho_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i + 0) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 1) * min_side_size + 0.5 * min_side_size))
+                                uid3 = f"{ortho_neighbour3.x},{ortho_neighbour3.y}"
+                                ortho_neighbour4 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i + 0) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j - 1) * min_side_size + 0.5 * min_side_size))
+                                uid4 = f"{ortho_neighbour4.x},{ortho_neighbour4.y}"
+                                incidency_mx[uid][uid1] = min_side_size
+                                incidency_mx[uid][uid2] = min_side_size
+                                incidency_mx[uid][uid3] = min_side_size
+                                incidency_mx[uid][uid4] = min_side_size
 
-                        if (i, j) == (0,0): # bottom right corner
-                            # pass
-                            ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size))
-                            uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
-                            ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size))
-                            uid2 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
-                            diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size))
-                            uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
-                            incidency_mx[uid][uid1] = min_side_size
-                            incidency_mx[uid][uid2] = min_side_size
-                            incidency_mx[uid][uid3] = diag_distance
-                        # if (i, j) == (side_index,0):
-                        elif (i, j) == (side_index,0): # top right corner
-                            ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + (side_index * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size))
-                            uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
-                            ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size))
-                            uid2 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
-                            diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size))
-                            uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
-                            incidency_mx[uid][uid1] = min_side_size
-                            incidency_mx[uid][uid2] = min_side_size
-                            incidency_mx[uid][uid3] = diag_distance
-                        elif (i, j) == (0,side_index): # bottom left corner
-                            ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index * min_side_size + 0.5 * min_side_size))
-                            uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
-                            ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size))
-                            uid2 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
-                            diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size))
-                            uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
-                            incidency_mx[uid][uid1] = min_side_size
-                            incidency_mx[uid][uid2] = min_side_size
-                            incidency_mx[uid][uid3] = diag_distance
-                        elif (i, j) == (side_index,side_index): # top left corner
-                            ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index * min_side_size + 0.5 * min_side_size))
-                            uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
-                            ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + (side_index * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size))
-                            uid2 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
-                            diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index-1 * min_side_size + 0.5 * min_side_size))
-                            uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
-                            incidency_mx[uid][uid1] = min_side_size
-                            incidency_mx[uid][uid2] = min_side_size
-                            incidency_mx[uid][uid3] = diag_distance
-                        elif (j == 0 and i != 0 and i != side_index): # right side
-                            ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + (i * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size))
-                            uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
-                            diag_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i+1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size))
-                            uid2 = f"{diag_neighbour2.x},{diag_neighbour2.y}"
-                            diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i-1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size))
-                            uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
-                            ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i+1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size))
-                            uid4 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
-                            ortho_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i-1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size))
-                            uid5 = f"{ortho_neighbour3.x},{ortho_neighbour3.y}"
-                            incidency_mx[uid][uid1] = min_side_size
-                            incidency_mx[uid][uid2] = diag_distance
-                            incidency_mx[uid][uid3] = diag_distance
-                            incidency_mx[uid][uid4] = min_side_size
-                            incidency_mx[uid][uid5] = min_side_size
-                        elif (i == side_index and j != 0 and j != side_index): # top side
-                            ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((side_index - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (j * min_side_size + 0.5 * min_side_size))
-                            uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
-                            diag_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((side_index - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 1) * min_side_size + 0.5 * min_side_size))
-                            uid2 = f"{diag_neighbour2.x},{diag_neighbour2.y}"
-                            diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((side_index - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j - 1) * min_side_size + 0.5 * min_side_size))
-                            uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
-                            ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((side_index) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 1) * min_side_size + 0.5 * min_side_size))
-                            uid4 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
-                            ortho_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((side_index) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j - 1) * min_side_size + 0.5 * min_side_size))
-                            uid5 = f"{ortho_neighbour3.x},{ortho_neighbour3.y}"
-                            incidency_mx[uid][uid1] = min_side_size
-                            incidency_mx[uid][uid2] = diag_distance
-                            incidency_mx[uid][uid3] = diag_distance
-                            incidency_mx[uid][uid4] = min_side_size
-                            incidency_mx[uid][uid5] = min_side_size
-                        elif (j == side_index and i != 0 and i != side_index): # left side
-                            ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + (i * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((side_index - 1) * min_side_size + 0.5 * min_side_size))
-                            uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
-                            diag_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i + 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((side_index - 1) * min_side_size + 0.5 * min_side_size))
-                            uid2 = f"{diag_neighbour2.x},{diag_neighbour2.y}"
-                            diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((side_index - 1) * min_side_size + 0.5 * min_side_size))
-                            uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
-                            ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i + 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index * min_side_size + 0.5 * min_side_size))
-                            uid4 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
-                            ortho_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (side_index * min_side_size + 0.5 * min_side_size))
-                            uid5 = f"{ortho_neighbour3.x},{ortho_neighbour3.y}"
-                            incidency_mx[uid][uid1] = min_side_size
-                            incidency_mx[uid][uid4] = min_side_size
-                            incidency_mx[uid][uid5] = min_side_size
-                            incidency_mx[uid][uid2] = diag_distance
-                            incidency_mx[uid][uid3] = diag_distance
-                        elif (i == 0 and j != 0 and j != side_index): # bottom side
-                            ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + (j * min_side_size + 0.5 * min_side_size))
-                            uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
-                            diag_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 1) * min_side_size + 0.5 * min_side_size))
-                            uid2 = f"{diag_neighbour2.x},{diag_neighbour2.y}"
-                            diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + (1 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j - 1) * min_side_size + 0.5 * min_side_size))
-                            uid3 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
-                            ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 1) * min_side_size + 0.5 * min_side_size))
-                            uid4 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
-                            ortho_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + (0 * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j - 1) * min_side_size + 0.5 * min_side_size))
-                            uid5 = f"{ortho_neighbour3.x},{ortho_neighbour3.y}"
-                            incidency_mx[uid][uid1] = min_side_size
-                            incidency_mx[uid][uid4] = min_side_size
-                            incidency_mx[uid][uid5] = min_side_size
-                            incidency_mx[uid][uid2] = diag_distance
-                            incidency_mx[uid][uid3] = diag_distance
-                        else: # inner node
-                            ortho_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i + 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 0) * min_side_size + 0.5 * min_side_size))
-                            uid1 = f"{ortho_neighbour1.x},{ortho_neighbour1.y}"
-                            ortho_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 0) * min_side_size + 0.5 * min_side_size))
-                            uid2 = f"{ortho_neighbour2.x},{ortho_neighbour2.y}"
-                            ortho_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i + 0) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 1) * min_side_size + 0.5 * min_side_size))
-                            uid3 = f"{ortho_neighbour3.x},{ortho_neighbour3.y}"
-                            ortho_neighbour4 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i + 0) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j - 1) * min_side_size + 0.5 * min_side_size))
-                            uid4 = f"{ortho_neighbour4.x},{ortho_neighbour4.y}"
-                            incidency_mx[uid][uid1] = min_side_size
-                            incidency_mx[uid][uid2] = min_side_size
-                            incidency_mx[uid][uid3] = min_side_size
-                            incidency_mx[uid][uid4] = min_side_size
-
-                            diag_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i + 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 1) * min_side_size + 0.5 * min_side_size))
-                            uid5 = f"{diag_neighbour1.x},{diag_neighbour1.y}"
-                            diag_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i + 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j - 1) * min_side_size + 0.5 * min_side_size))
-                            uid6 = f"{diag_neighbour2.x},{diag_neighbour2.y}"
-                            diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j - 1) * min_side_size + 0.5 * min_side_size))
-                            uid7 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
-                            diag_neighbour4 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 1) * min_side_size + 0.5 * min_side_size))
-                            uid8 = f"{diag_neighbour4.x},{diag_neighbour4.y}"
-                            incidency_mx[uid][uid5] = diag_distance
-                            incidency_mx[uid][uid6] = diag_distance
-                            incidency_mx[uid][uid7] = diag_distance
-                            incidency_mx[uid][uid8] = diag_distance
+                                diag_neighbour1 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i + 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 1) * min_side_size + 0.5 * min_side_size))
+                                uid5 = f"{diag_neighbour1.x},{diag_neighbour1.y}"
+                                diag_neighbour2 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i + 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j - 1) * min_side_size + 0.5 * min_side_size))
+                                uid6 = f"{diag_neighbour2.x},{diag_neighbour2.y}"
+                                diag_neighbour3 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j - 1) * min_side_size + 0.5 * min_side_size))
+                                uid7 = f"{diag_neighbour3.x},{diag_neighbour3.y}"
+                                diag_neighbour4 = Point2d(x=(self.center_point.x - self.side_size / 2) + ((i - 1) * min_side_size + 0.5 * min_side_size), y=(self.center_point.y - self.side_size / 2) + ((j + 1) * min_side_size + 0.5 * min_side_size))
+                                uid8 = f"{diag_neighbour4.x},{diag_neighbour4.y}"
+                                incidency_mx[uid][uid5] = diag_distance
+                                incidency_mx[uid][uid6] = diag_distance
+                                incidency_mx[uid][uid7] = diag_distance
+                                incidency_mx[uid][uid8] = diag_distance
                 return node_dict, incidency_mx
             else:
                 return None, None

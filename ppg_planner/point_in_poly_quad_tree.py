@@ -17,6 +17,44 @@ from visualization_msgs.msg import Marker, MarkerArray
 from pympler import asizeof
 
 
+def merge_images(image1, image2):
+    """
+    Merges two images by averaging the RGB values of each corresponding pixel.
+
+    Args:
+        image1: Path to the first image.
+        image2: Path to the second image.
+
+    Returns:
+        The merged image, or None if the images have incompatible sizes or channels.
+    """
+
+    # Load the images
+
+    # Check if images were loaded successfully
+    if image1 is None:
+        print(f"Error: Could not load image from image1")
+        return None
+    if image2 is None:
+        print(f"Error: Could not load image from image2")
+        return None
+
+    # Get the height, width, and number of channels for both images
+    height1, width1, channels1 = image1.shape
+    height2, width2, channels2 = image2.shape
+
+    # Check if the images have the same dimensions and number of channels
+    if (height1 != height2) or (width1 != width2) or (channels1 != channels2):
+        print("Error: Images must have the same dimensions and number of channels.")
+        return None
+
+    # Create a blank image with the same dimensions and data type as the input images
+    merged_image =  cv.addWeighted(image1, 0.5, image2, 0.5, 0)
+
+    # Return the merged image
+    return merged_image
+
+
 def visualize_node_graph(node_graph, canvas_size=1000, node_radius=2, line_thickness=1):
     # Create a black canvas
 
@@ -27,12 +65,21 @@ def visualize_node_graph(node_graph, canvas_size=1000, node_radius=2, line_thick
     # Draw edges
     for i, connections in node_graph.node_incidency_matrix.items():
         node1 = node_graph.node_list[i]
+        uid1 = f"{node1.x},{node1.y}"
         center1 = (multiplier * int(node1.x), multiplier * int(node1.y))
         for j, distance in connections.items():
             if j in node_graph.node_list:
                 node2 = node_graph.node_list[j]
+                uid2 = f"{node2.x},{node2.y}"
                 center2 = (multiplier * int(node2.x), multiplier * int(node2.y))
-                cv.line(canvas, center1, center2, (255, 0, 0), line_thickness)  # Draw edge as a white line
+                if uid1 in node_graph.node_incidency_matrix[uid2] and uid2 in node_graph.node_incidency_matrix[uid1]:
+                    cv.line(canvas, center1, center2, (255, 0, 0), line_thickness)  # Draw edge as a white line
+                elif uid1 in node_graph.node_incidency_matrix[uid2] and uid2 not in node_graph.node_incidency_matrix[uid1]:
+                    cv.line(canvas, center1, center2, (255, 0, 255), line_thickness)  # Draw edge as a white line
+                elif uid1 not in node_graph.node_incidency_matrix[uid2] and uid2 in node_graph.node_incidency_matrix[uid1]:
+                    cv.line(canvas, center1, center2, (0, 255, 255), line_thickness)  # Draw edge as a white line
+                else:
+                    cv.line(canvas, center1, center2, (0, 0, 255), line_thickness)  # Draw edge as a white line
             else:
                 x, y = j.split(sep=",")
                 center2 = (multiplier * int(float(x)), multiplier * int(float(y)))
@@ -47,9 +94,9 @@ def visualize_node_graph(node_graph, canvas_size=1000, node_radius=2, line_thick
 
     cv.imwrite(f"/home/{getuser()}/Pictures/result_graph.png", canvas)    
 
-    cv.imshow("Node Graph local", canvas)
-    cv.waitKey(0)
-    cv.destroyAllWindows()
+    # cv.imshow("Node Graph local", canvas)
+    # cv.waitKey(0)
+    # cv.destroyAllWindows()
     return canvas
 
 
@@ -194,9 +241,15 @@ class PPGPlannerNode(Node):
 
         # a = planners.NodeGraph(tree.get_included_node_list())
         self.get_logger().warn(f"time = {time.time() - start_time}")
-        visualize_node_graph(a)
+        im1 = visualize_node_graph(a)
         
-        tree.visualize_quad_tree(color=(255, 0, 255))
+        im2 = tree.visualize_quad_tree(color=(255, 0, 255))
+        im_res = merge_images(im1, im2)
+        cv.imwrite(f"/home/{getuser()}/Pictures/result_analysis/result_graph.png", im_res)    
+        cv.imshow("Node Graph", im_res)
+        cv.waitKey(0)
+        cv.destroyAllWindows()
+
 
 
 
