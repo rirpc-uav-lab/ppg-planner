@@ -19,32 +19,35 @@ from pympler import asizeof
 
 def visualize_node_graph(node_graph, canvas_size=1000, node_radius=2, line_thickness=1):
     # Create a black canvas
-    canvas = np.zeros((canvas_size, canvas_size, 3), dtype=np.uint8)
+
+    multiplier = 1
+
+    canvas = np.zeros((canvas_size * multiplier, canvas_size * multiplier, 3), dtype=np.uint8)
 
     # Draw edges
     for i, connections in node_graph.node_incidency_matrix.items():
         node1 = node_graph.node_list[i]
-        center1 = (int(node1.x), int(node1.y))
+        center1 = (multiplier * int(node1.x), multiplier * int(node1.y))
         for j, distance in connections.items():
             if j in node_graph.node_list:
                 node2 = node_graph.node_list[j]
-                center2 = (int(node2.x), int(node2.y))
+                center2 = (multiplier * int(node2.x), multiplier * int(node2.y))
                 cv.line(canvas, center1, center2, (255, 0, 0), line_thickness)  # Draw edge as a white line
             else:
                 x, y = j.split(sep=",")
-                center2 = (int(float(x)), int(float(y)))
+                center2 = (multiplier * int(float(x)), multiplier * int(float(y)))
                 cv.line(canvas, center1, center2, (0, 0, 255), line_thickness)  # Draw edge as a white line
     # Draw nodes
     for uid, node in node_graph.node_list.items():
-        center = (int(node.x), int(node.y))
+        center = (multiplier * int(node.x), multiplier * int(node.y))
         cv.circle(canvas, center, node_radius, (0, 255, 0), -1)  # Draw node as a green circle
 
-    # Flip the canvas vertically to match the coordinate system
+    # Flip the canvas vertically and horizontally to match the ROS coordinate system
     canvas = cv.flip(canvas, -1)
 
     cv.imwrite(f"/home/{getuser()}/Pictures/result_graph.png", canvas)    
 
-    cv.imshow("Node Graph", canvas)
+    cv.imshow("Node Graph local", canvas)
     cv.waitKey(0)
     cv.destroyAllWindows()
     return canvas
@@ -176,10 +179,10 @@ class PPGPlannerNode(Node):
         for zone in exclude_poly_list:
             tree.exclude_zone(zone)
         # tree.divide_until_all_quads_are_smallest_size(divide_only_included=True)
-        for zone in zone_poly:
-            tree.include_zone(zone)
-        for zone in exclude_poly_list:
-            tree.exclude_zone(zone)
+        # for zone in zone_poly:
+        #     tree.include_zone(zone)
+        # for zone in exclude_poly_list:
+        #     tree.exclude_zone(zone)
 
         min_side_size = tree.get_min_side_size()
         nd, i_mx = tree.generate_included_incidency_matrix(min_side_size)
