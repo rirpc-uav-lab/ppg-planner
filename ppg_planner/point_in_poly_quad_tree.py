@@ -231,18 +231,16 @@ class PPGPlannerNode(Node):
         # for zone in exclude_poly_list:
         #     tree.exclude_zone(zone)
 
-        min_side_size = tree.get_min_side_size()
-        nd, i_mx = tree.generate_included_incidency_matrix(min_side_size)
+        nd, i_mx = tree.generate_included_incidency_matrix()
 
         a = planners.NodeGraph(nd, i_mx)
 
-        # print(f"memory = {asizeof.asizeof(tree) / 8 / 1024 / 1024} Mb")
-        # print(f"tree.get_included_node_list().size() = {")
+        print(f"memory = {asizeof.asizeof(tree) / 8 / 1024 / 1024} Mb")
 
         # a = planners.NodeGraph(tree.get_included_node_list())
         self.get_logger().warn(f"time = {time.time() - start_time}")
-        im1 = visualize_node_graph(a)
         
+        im1 = visualize_node_graph(a)
         im2 = tree.visualize_quad_tree(color=(255, 0, 255))
         im_res = merge_images(im1, im2)
         cv.imwrite(f"/home/{getuser()}/Pictures/result_analysis/result_graph.png", im_res)    
