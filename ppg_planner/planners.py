@@ -3,7 +3,6 @@ import numpy as np
 
 from tqdm import tqdm
 
-import ppg_planner.quad_tree as quad
 import ppg_planner.geometry as gm
 
 class Data:
@@ -34,8 +33,12 @@ class NodeGraph:
         self.node_list = node_list # n x n array, where n is the number of nodes
         self.node_incidency_matrix = node_incidency_matrix # calculate
 
+        for uid, node_center in self.node_list.items():
+            node = Node(node_center, uid)
+            self.node_list[uid] = node
 
-        def generate_incidency_from_quad_list(self, node_list: list[quad.Quad]):
+
+        def generate_incidency_from_quad_list(self, node_list):
             for i in tqdm(range(len(node_list))):
                 node1 = node_list[i]
                 self.node_incidency_matrix[i] = {}

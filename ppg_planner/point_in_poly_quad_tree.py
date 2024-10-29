@@ -65,13 +65,13 @@ def visualize_node_graph(node_graph, canvas_size=1000, node_radius=2, line_thick
     # Draw edges
     for i, connections in node_graph.node_incidency_matrix.items():
         node1 = node_graph.node_list[i]
-        uid1 = f"{node1.x},{node1.y}"
-        center1 = (multiplier * int(node1.x), multiplier * int(node1.y))
+        uid1 = f"{node1.position.x},{node1.position.y}"
+        center1 = (multiplier * int(node1.position.x), multiplier * int(node1.position.y))
         for j, distance in connections.items():
             if j in node_graph.node_list:
                 node2 = node_graph.node_list[j]
-                uid2 = f"{node2.x},{node2.y}"
-                center2 = (multiplier * int(node2.x), multiplier * int(node2.y))
+                uid2 = f"{node2.position.x},{node2.position.y}"
+                center2 = (multiplier * int(node2.position.x), multiplier * int(node2.position.y))
                 if uid1 in node_graph.node_incidency_matrix[uid2] and uid2 in node_graph.node_incidency_matrix[uid1]:
                     cv.line(canvas, center1, center2, (255, 0, 0), line_thickness)  # Draw edge as a white line
                 elif uid1 in node_graph.node_incidency_matrix[uid2] and uid2 not in node_graph.node_incidency_matrix[uid1]:
@@ -86,7 +86,7 @@ def visualize_node_graph(node_graph, canvas_size=1000, node_radius=2, line_thick
                 cv.line(canvas, center1, center2, (0, 0, 255), line_thickness)  # Draw edge as a white line
     # Draw nodes
     for uid, node in node_graph.node_list.items():
-        center = (multiplier * int(node.x), multiplier * int(node.y))
+        center = (multiplier * int(node.position.x), multiplier * int(node.position.y))
         cv.circle(canvas, center, node_radius, (0, 255, 0), -1)  # Draw node as a green circle
 
     # Flip the canvas vertically and horizontally to match the ROS coordinate system
