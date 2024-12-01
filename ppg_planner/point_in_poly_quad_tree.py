@@ -6,11 +6,13 @@ import cv2 as cv
 from rclpy.node import Node
 from copy import copy
 from geometry_msgs.msg import PolygonStamped, Point32
+from nav_msgs.msg import Odometry
 from ppg_planner_interfaces.msg import Poly
 from ppg_planner_interfaces.srv import PolyGrid
 import ppg_planner.geometry as gm
 import ppg_planner.quad_tree as quad
 import ppg_planner.planners as planners
+import ppg_planner.zone_division as division
 
 from getpass import getuser
 from visualization_msgs.msg import Marker, MarkerArray
@@ -98,6 +100,62 @@ def visualize_node_graph(node_graph, canvas_size=1000, node_radius=2, line_thick
     # cv.waitKey(0)
     # cv.destroyAllWindows()
     return canvas
+
+
+
+
+def visualize_wave_graphs(wave_graphs, colors, canvas_size=1000, node_radius=2, line_thickness=1):
+    if len(wave_graphs) != len(colors):
+        raise ValueError("The length of wave_graphs and colors must be equal.")
+
+    multiplier = 1
+    canvas = np.zeros((canvas_size * multiplier, canvas_size * multiplier, 3), dtype=np.uint8)
+
+    for drone_number, wave_graph in wave_graphs.items():
+        # if not isinstance(wave_graph, WaveGraph):
+        #     raise TypeError(f"Expected WaveGraph instance for drone {drone_number}, got {type(wave_graph)}")
+
+        color = colors[drone_number]
+
+        # Draw edges
+        for i, connections in wave_graph.node_incidency_matrix.items():
+            node1 = wave_graph.node_list[i]
+            uid1 = f"{node1.position.x},{node1.position.y}"
+            center1 = (multiplier * int(node1.position.x), multiplier * int(node1.position.y))
+            for j, distance in connections.items():
+                if j in wave_graph.node_list:
+                    node2 = wave_graph.node_list[j]
+                    uid2 = f"{node2.position.x},{node2.position.y}"
+                    center2 = (multiplier * int(node2.position.x), multiplier * int(node2.position.y))
+                    if uid1 in wave_graph.node_incidency_matrix[uid2] and uid2 in wave_graph.node_incidency_matrix[uid1]:
+                        cv.line(canvas, center1, center2, (255, 0, 0), line_thickness)  # Draw edge as a white line
+                    elif uid1 in wave_graph.node_incidency_matrix[uid2] and uid2 not in wave_graph.node_incidency_matrix[uid1]:
+                        cv.line(canvas, center1, center2, (255, 0, 255), line_thickness)  # Draw edge as a white line
+                    elif uid1 not in wave_graph.node_incidency_matrix[uid2] and uid2 in wave_graph.node_incidency_matrix[uid1]:
+                        cv.line(canvas, center1, center2, (0, 255, 255), line_thickness)  # Draw edge as a white line
+                    else:
+                        cv.line(canvas, center1, center2, (0, 0, 255), line_thickness)  # Draw edge as a white line
+                else:
+                    x, y = j.split(sep=",")
+                    center2 = (multiplier * int(float(x)), multiplier * int(float(y)))
+                    cv.line(canvas, center1, center2, (0, 0, 255), line_thickness)  # Draw edge as a white line
+
+        # Draw nodes
+        for uid, node in wave_graph.node_list.items():
+            center = (multiplier * int(node.position.x), multiplier * int(node.position.y))
+            cv.circle(canvas, center, node_radius, color, -1)  # Draw node with the specified color
+
+    # Flip the canvas vertically and horizontally to match the ROS coordinate system
+    canvas = cv.flip(canvas, -1)
+
+    cv.imwrite(f"/home/{getuser()}/Pictures/result_graph.png", canvas)
+
+    # cv.imshow("Node Graph local", canvas)
+    # cv.waitKey(0)
+    # cv.destroyAllWindows()
+    return canvas
+
+
 
 
 class PPGPlannerNode(Node):
@@ -235,16 +293,48 @@ class PPGPlannerNode(Node):
 
         a = planners.NodeGraph(nd, i_mx)
 
+        drone_positions = []
+        drone1_odom = Odometry()
+        drone1_odom.pose.pose.position.x = -0.2
+        drone1_odom.pose.pose.position.y = 0.0
+        drone1_odom.pose.pose.position.z = 0.0
+
+        drone_positions.append(drone1_odom)
+
+        drone2_odom = Odometry()
+        drone2_odom.pose.pose.position.x = 0.0
+        drone2_odom.pose.pose.position.y = -0.2
+        drone2_odom.pose.pose.position.z = 0.0
+
+        drone_positions.append(drone2_odom)
+
+        drone3_odom = Odometry()
+        drone3_odom.pose.pose.position.x = -0.2
+        drone3_odom.pose.pose.position.y = -0.2
+        drone3_odom.pose.pose.position.z = 0.0
+
+        drone_positions.append(drone3_odom)
+
+        divisor = division.ZoneDivisionWavefront()
+        wave_graph_dict = divisor.divide(a, drone_positions=drone_positions)
+
+        print(wave_graph_dict)
+
+        colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+
+        wave_graphs_img = visualize_wave_graphs(wave_graphs=wave_graph_dict, colors=colors)
+
         print(f"memory = {asizeof.asizeof(tree) / 8 / 1024 / 1024} Mb")
 
         # a = planners.NodeGraph(tree.get_included_node_list())
         self.get_logger().warn(f"time = {time.time() - start_time}")
         
-        im1 = visualize_node_graph(a)
-        im2 = tree.visualize_quad_tree(color=(255, 0, 255))
-        im_res = merge_images(im1, im2)
-        cv.imwrite(f"/home/{getuser()}/Pictures/result_analysis/result_graph.png", im_res)    
-        cv.imshow("Node Graph", im_res)
+        # im1 = visualize_node_graph(a)
+        # im2 = tree.visualize_quad_tree(color=(255, 0, 255))
+        # im_res = merge_images(im1, im2)
+        # cv.imwrite(f"/home/{getuser()}/Pictures/result_analysis/result_graph.png", im_res)    
+        cv.imwrite(f"/home/{getuser()}/Pictures/result_analysis/divided_graph.png", wave_graphs_img)    
+        cv.imshow("Node Graph", wave_graphs_img)
         cv.waitKey(0)
         cv.destroyAllWindows()
 
