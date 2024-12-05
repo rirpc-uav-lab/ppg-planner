@@ -1,4 +1,5 @@
 # Implementing an algorithm from https://alienryderflex.com/polygon/
+import os
 import time
 import rclpy
 import numpy as np
@@ -64,12 +65,12 @@ def visualize_node_graph(node_graph, canvas_size=1000, node_radius=2, line_thick
 
     # Draw edges
     for i, connections in node_graph.node_incidency_matrix.items():
-        node1 = node_graph.node_list[i]
+        node1 = node_graph.node_list[i].position
         uid1 = f"{node1.position.x},{node1.position.y}"
         center1 = (multiplier * int(node1.position.x), multiplier * int(node1.position.y))
         for j, distance in connections.items():
             if j in node_graph.node_list:
-                node2 = node_graph.node_list[j]
+                node2 = node_graph.node_list[j].position
                 uid2 = f"{node2.position.x},{node2.position.y}"
                 center2 = (multiplier * int(node2.position.x), multiplier * int(node2.position.y))
                 if uid1 in node_graph.node_incidency_matrix[uid2] and uid2 in node_graph.node_incidency_matrix[uid1]:
@@ -86,7 +87,8 @@ def visualize_node_graph(node_graph, canvas_size=1000, node_radius=2, line_thick
                 cv.line(canvas, center1, center2, (0, 0, 255), line_thickness)  # Draw edge as a white line
     # Draw nodes
     for uid, node in node_graph.node_list.items():
-        center = (multiplier * int(node.position.x), multiplier * int(node.position.y))
+        node_ = node.position
+        center = (multiplier * int(node_.position.x), multiplier * int(node_.position.y))
         cv.circle(canvas, center, node_radius, (0, 255, 0), -1)  # Draw node as a green circle
 
     # Flip the canvas vertically and horizontally to match the ROS coordinate system
@@ -225,26 +227,41 @@ class PPGPlannerNode(Node):
             tree.include_zone(zone)
         for zone in exclude_poly_list:
             tree.exclude_zone(zone)
+
+        self.get_logger().warn(f"quad tree generation = {time.time() - start_time}")
+        start_time = time.time()
+        
         # tree.divide_until_all_quads_are_smallest_size(divide_only_included=True)
         # for zone in zone_poly:
         #     tree.include_zone(zone)
         # for zone in exclude_poly_list:
         #     tree.exclude_zone(zone)
 
+
         nd, i_mx = tree.generate_included_incidency_matrix()
 
-        a = planners.NodeGraph(nd, i_mx)
 
-        print(f"memory = {asizeof.asizeof(tree) / 8 / 1024 / 1024} Mb")
+        a = planners.NodeGraph(nd, i_mx)
+        self.get_logger().warn(f"node graph generation = {time.time() - start_time}")
+
+        # print(f"memory = {asizeof.asizeof(tree) / 8 / 1024 / 1024} Mb")
 
         # a = planners.NodeGraph(tree.get_included_node_list())
-        self.get_logger().warn(f"time = {time.time() - start_time}")
+        a = planners.NodeGraph(nd, i_mx)
         
         im1 = visualize_node_graph(a)
         im2 = tree.visualize_quad_tree(color=(255, 0, 255))
         im_res = merge_images(im1, im2)
-        cv.imwrite(f"/home/{getuser()}/Pictures/result_analysis/result_graph.png", im_res)    
+
+        dir_path = f"/home/{getuser()}/Pictures/result_analysis/"
+
+        if not os.path.exists(dir_path):
+            os.mkdir(dir_path)
+
+        cv.imwrite(f"{dir_path}result_graph.png", im_res)    
+        cv.imwrite(f"{dir_path}result_tree.png", im2)    
         cv.imshow("Node Graph", im_res)
+        # cv.imshow("Tree", im2)
         cv.waitKey(0)
         cv.destroyAllWindows()
 
